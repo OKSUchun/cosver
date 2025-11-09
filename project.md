@@ -44,3 +44,9 @@
 5. Aggregator 정보 통합
 6. DB 에 입력
 7. Streamlit 시각화
+
+## 4. Aggregator 
+같은 상품을 그룹핑하는 기준
+- 상품명
+- 용량
+- 갯수
