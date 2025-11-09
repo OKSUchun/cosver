@@ -1,0 +1,7 @@
+[tool.isort]
+profile = "black" # Use a built-in profile (e.g., black, django, google)
+line_length = 88 # Match black's default line length
+include_trailing_comma = true
+multi_line_output = 3 # Vertical Hanging Indent
+known_first_party = ["src"] # Your local project modules
+skip = ["env", "venv"] # Folders to ignore
