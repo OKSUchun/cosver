@@ -1,6 +1,7 @@
 # olive_search.py
 # Usage: python olive_search.py "키워드"
 import sys
+
 from playwright.sync_api import sync_playwright
 
 

@@ -1,7 +1,6 @@
-import requests
+from urllib.parse import quote
 
 import requests
-from urllib.parse import quote
 
 
 def search_product(keyword: str):
