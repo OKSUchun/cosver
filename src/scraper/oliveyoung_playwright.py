@@ -79,6 +79,7 @@ def search_product(keyword, headful=True):
                     "name": item.get("GOODS_NM"),
                     "brand": item.get("ONL_BRND_NM"),
                     "price": item.get("SALE_PRC") or item.get("NORM_PRC"),
+                    "img": f"https://image.oliveyoung.co.kr/uploads/images/goods/{item.get('IMG_PATH_NM')}" if item.get("IMG_PATH_NM") else None,
                     "url": f"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo={item.get('GOODS_NO')}&dispCatNo=1000001000200060002&trackingCd=Result_1",
                 }
             )

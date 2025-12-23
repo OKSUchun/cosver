@@ -58,6 +58,7 @@ def search_product(keyword: str):
                         "brand": entity.get('item').get('market_name'),
                         "price": entity.get('item').get('price'),
                         "url": entity.get('item').get('remote_deeplink'),
+                        "img": entity.get('item').get('image'),
                     }
                 )
 
@@ -66,7 +67,7 @@ def search_product(keyword: str):
 
 if __name__ == "__main__":
     keyword = "센슈얼 누드 글로스"
-    results = search_ably_api(keyword)
+    results = search_product(keyword)
 
     print(f"🔍 Found {len(results)} items")
     for r in results[:5]:

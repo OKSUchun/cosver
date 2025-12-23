@@ -41,7 +41,7 @@ def init_db():
     cursor.executescript(schema)
     conn.commit()
     conn.close()
-    print(f"Database initialized: {get_db_path()}")
+    print(f"✅ Database initialized: {get_db_path()}")
 
 def get_or_create_product(cursor, name: str, brand: str) -> int:
     """Get existing product ID or create new product."""
@@ -125,9 +125,13 @@ def save_products_batch(products: List[Dict[str, Any]]):
                     product.get('img', '')
                 )
             )
+            
+            # Also download and save image as BLOB
+            if product.get('img'):
+                download_and_save_image(product_id, product.get('platform', ''), product.get('img'), conn=conn)
         
         conn.commit()
-        print(f"💾 Saved {len(products)} products to database")
+        print(f"💾 Saved {len(products)} products and their images to database")
     finally:
         conn.close()
 
@@ -184,91 +188,122 @@ def get_cached_results(keyword: str, max_age_hours: int = CACHE_HOURS) -> List[D
     finally:
         conn.close()
 
-def download_and_save_image(product_id: int, platform: str, img_url: str, base_dir: str = "downloaded_images") -> Optional[str]:
+def download_and_save_image(product_id: int, platform: str, img_url: str, base_dir: str = "downloaded_images", conn=None) -> Optional[str]:
     """
-    Download image and save path to database.
-    Returns local file path or None.
+    Download image, save to file (optional) and save as BLOB to database.
+    Returns local file path if saved, or "DB_BLOB" if only saved in DB.
     """
     if not img_url:
         return None
     
     try:
-        # Check if already downloaded
-        conn = sqlite3.connect(get_db_path())
+        # Use existing connection if provided, else create new one
+        should_close = False
+        if conn is None:
+            conn = sqlite3.connect(get_db_path())
+            should_close = True
+        
         cursor = conn.cursor()
+        
+        # Check if already downloaded
         cursor.execute(
-            "SELECT local_path FROM images WHERE product_id = ? AND platform = ?",
+            "SELECT local_path, image_data FROM images WHERE product_id = ? AND platform = ?",
             (product_id, platform)
         )
         result = cursor.fetchone()
         
-        if result and result[0] and os.path.exists(result[0]):
-            conn.close()
-            return result[0]
+        if result:
+            local_path, image_data = result
+            if local_path and os.path.exists(local_path):
+                if should_close: conn.close()
+                return local_path
+            if image_data:
+                if should_close: conn.close()
+                return "DB_BLOB"
         
         # Download image
         response = requests.get(img_url, timeout=10)
         if response.status_code != 200:
-            conn.close()
+            if should_close: conn.close()
             return None
         
-        # Create directory
+        image_content = response.content
+        
+        # 1. Save to File (Optional)
         save_path = Path(base_dir)
         save_path.mkdir(parents=True, exist_ok=True)
         
-        # Determine extension
         content_type = response.headers.get('Content-Type', '')
         ext = '.jpg'
-        if 'png' in content_type:
-            ext = '.png'
-        elif 'webp' in content_type:
-            ext = '.webp'
+        if 'png' in content_type: ext = '.png'
+        elif 'webp' in content_type: ext = '.webp'
         
-        # Save file
         filename = f"{platform}_{product_id}{ext}"
         full_path = save_path / filename
         
-        with open(full_path, 'wb') as f:
-            f.write(response.content)
+        try:
+            with open(full_path, 'wb') as f:
+                f.write(image_content)
+            local_path_str = str(full_path)
+        except Exception as e:
+            print(f"⚠️ Failed to write to local filesystem: {e}")
+            local_path_str = None
         
-        # Save to database
+        # 2. Save to database as BLOB
         cursor.execute(
-            """INSERT OR REPLACE INTO images (product_id, platform, img_url, local_path)
-               VALUES (?, ?, ?, ?)""",
-            (product_id, platform, img_url, str(full_path))
+            """INSERT OR REPLACE INTO images (product_id, platform, img_url, local_path, image_data)
+               VALUES (?, ?, ?, ?, ?)""",
+            (product_id, platform, img_url, local_path_str, sqlite3.Binary(image_content))
         )
-        conn.commit()
-        conn.close()
         
-        return str(full_path)
+        if should_close:
+            conn.commit()
+            conn.close()
+        
+        return local_path_str or "DB_BLOB"
     except Exception as e:
-        print(f"❌ Failed to download image: {e}")
+        print(f"❌ Failed to download/save image: {e}")
         return None
 
+def get_image_data_from_db(product_id: int, platform: str) -> Optional[bytes]:
+    """Retrieve raw image data from database BLOB."""
+    conn = sqlite3.connect(get_db_path())
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "SELECT image_data FROM images WHERE product_id = ? AND platform = ?",
+            (product_id, platform)
+        )
+        result = cursor.fetchone()
+        return result[0] if result else None
+    finally:
+        conn.close()
+
 def get_all_products_with_images() -> List[Dict[str, Any]]:
-    """Get all products with their local image paths."""
+    """Get all products with their image info (local path or BLOB status)."""
     conn = sqlite3.connect(get_db_path())
     cursor = conn.cursor()
     
     try:
         cursor.execute(
-            """SELECT p.id, p.name, p.brand, i.platform, i.local_path, pr.price
+            """SELECT p.id, p.name, p.brand, i.platform, i.local_path, pr.price, 
+                      CASE WHEN i.image_data IS NOT NULL THEN 1 ELSE 0 END as has_blob
                FROM products p
                JOIN images i ON p.id = i.product_id
                JOIN prices pr ON p.id = pr.product_id AND i.platform = pr.platform
-               WHERE i.local_path IS NOT NULL
                ORDER BY p.id"""
         )
         
         results = []
-        for product_id, name, brand, platform, local_path, price in cursor.fetchall():
+        for product_id, name, brand, platform, local_path, price, has_blob in cursor.fetchall():
             results.append({
                 'product_id': product_id,
                 'name': name,
                 'brand': brand,
                 'platform': platform,
                 'local_image_path': local_path,
-                'price': price
+                'price': price,
+                'has_blob': bool(has_blob)
             })
         
         return results

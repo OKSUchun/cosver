@@ -36,9 +36,7 @@ def search_product(keyword: str, category: int = 104, limit: int = 10):
 
     res_json = response.json()
     goods_list = res_json.get("data", {}).get("list", [])
-    # print(goods_list)
-    results = []
-
+    
     results = [
         {
             "platform": "musinsa",
@@ -46,6 +44,7 @@ def search_product(keyword: str, category: int = 104, limit: int = 10):
             "brand": g.get("brandName"),
             "price": g.get("price") or g.get("couponPrice"),
             "url": g.get("goodsLinkUrl"),
+            "img": g.get("thumbnail"),
         }
         for g in goods_list[:limit]
     ]
