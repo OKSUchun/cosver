@@ -2,7 +2,7 @@ import unittest
 import os
 import sqlite3
 from datetime import datetime, timedelta
-from src.database.db import (
+from cosver.database.db import (
     init_db, 
     save_product, 
     save_products_batch,

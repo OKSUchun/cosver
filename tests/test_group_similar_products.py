@@ -1,7 +1,7 @@
 """
 Tests for group_similar_products function.
 """
-from src.frontend.utils import group_similar_products
+from cosver.frontend.utils import group_similar_products
 
 
 def test_group_similar_products_basic():
@@ -18,12 +18,14 @@ def test_group_similar_products_basic():
 
     groups = group_similar_products(products, threshold=0.7)
 
-    # Should have 2 groups: similar products grouped together, different product separate
-    assert len(groups) == 1
-    # First group should have 2 similar products
-    assert len(groups[0]) == 3
-    # Second group should have 1 different product
-    assert len(groups[1]) == 0
+    # Should have 2 groups because the third item varies significantly in text length (prefix)
+    # and we don't have images to compare.
+    # Item 1 and 2 match (high similarity). Item 3 ("OY단독컬러...") is distinct enough at 0.7 threshold.
+    assert len(groups) == 2
+    # First group has 2 items
+    assert len(groups[0]) == 2
+    # Second group has 1 item
+    assert len(groups[1]) == 1
 
 
 def test_group_similar_products_exact_match():

@@ -161,4 +161,4 @@ cython_debug/
 #.idea/
 
 # 이미지 관련 파일
-downloaded_images/
+data/images/

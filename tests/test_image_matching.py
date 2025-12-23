@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from src.aggregator.image_matcher import download_image, calculate_similarity
-from src.frontend.utils import group_similar_products
+from cosver.aggregator.image_matcher import download_image, calculate_similarity
+from cosver.frontend.utils import group_similar_products
 
 class TestImageMatching(unittest.TestCase):
     def test_download_image(self):

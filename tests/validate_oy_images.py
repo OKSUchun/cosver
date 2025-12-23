@@ -1,8 +1,8 @@
 
 import os
 import sys
-from src.scraper.oliveyoung_playwright import search_product
-from src.database.db import save_product, download_and_save_image, init_db, get_db_path, get_image_data_from_db
+from cosver.scraper.oliveyoung_playwright import search_product
+from cosver.database.db import save_product, download_and_save_image, init_db, get_db_path, get_image_data_from_db
 
 def validate():
     keyword = "닥터지 크림"
