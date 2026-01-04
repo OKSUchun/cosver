@@ -15,6 +15,7 @@ def search_product(keyword, headful=False):
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
         "--disable-gpu",
+        "--disable-blink-features=AutomationControlled", # Hide automation from basic checks
     ]
     
     if headful:
@@ -23,7 +24,11 @@ def search_product(keyword, headful=False):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=is_headless, args=browser_args)
         # create context with default viewport None to use full window
-        context = browser.new_context(viewport={"width": 1280, "height": 800})
+        # Set a realistic user agent
+        context = browser.new_context(
+            viewport={"width": 1280, "height": 800},
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
         page = context.new_page()
 
         # 1) 먼저 검색 메인 페이지로 가서 Cloudflare 검사/세션 쿠키를 통과시킨다
@@ -60,7 +65,12 @@ def search_product(keyword, headful=False):
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json, text/javascript, */*; q=0.01'
+                        'Accept': 'application/json, text/javascript, */*; q=0.01',
+                        'Origin': 'https://www.oliveyoung.co.kr',
+                        'Referer': 'https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query=' + encodeURIComponent(kw),
+                        'Sec-Fetch-Dest': 'empty',
+                        'Sec-Fetch-Mode': 'cors',
+                        'Sec-Fetch-Site': 'same-origin'
                     },
                     body: params.toString(),
                     credentials: 'same-origin' // 중요: 브라우저 쿠키 전송
