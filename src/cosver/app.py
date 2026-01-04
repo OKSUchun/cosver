@@ -2,15 +2,34 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import time
+import os
 from cosver.aggregator.search import search_all_platforms
 from cosver.scraper.ably import search_product as ab
 from cosver.scraper.musinsa import search_product as ms
 from cosver.scraper.oliveyoung_playwright import search_product as oy
 from cosver.scraper.zigzag import search_product as zz
 from cosver.frontend.utils import group_similar_products
+import subprocess
+
+# --- Playwright Install (for Streamlit Cloud) ---
+def install_playwright():
+    try:
+        import playwright
+    except ImportError:
+        return
+    
+    # Check if chromium exists
+    try:
+        subprocess.run(["playwright", "install", "chromium"], check=True)
+        print("✅ Playwright chromium installed")
+    except Exception as e:
+        print(f"⚠️ Playwright install failed: {e}")
+
+if os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud" or os.getenv("IS_CLOUD"):
+    install_playwright()
 
 # --- Page Config ---
-st.set_page_config(page_title="올최맞이", page_icon="💄", layout="centered")
+st.set_page_config(page_title="올최맞", page_icon="💄", layout="centered")
 
 # --- UI Rules & CSS (Follows cosver.md) ---
 st.markdown("""
@@ -253,7 +272,7 @@ def render_card_html(item, is_cheapest=False, price_diff=0):
 </a>"""
 
 # --- Custom Header ---
-st.markdown('<div class="header-container"><h1>💄 올최맞이</h1><p style="color: #666;">OliveYoung, Ably, Zigzag, Musinsa 최저가 검색</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-container"><h1>💄 올최맞</h1><p style="color: #666;">OliveYoung, Ably, Zigzag, Musinsa 최저가 검색</p></div>', unsafe_allow_html=True)
 
 # --- Main App Logic ---
 keyword = st.text_input("Product Search", placeholder="e.g. 헤라 센슈얼 누드 글로스", label_visibility="collapsed")

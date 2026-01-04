@@ -162,3 +162,7 @@ cython_debug/
 
 # 이미지 관련 파일
 data/images/
+*.jpg
+*.png
+*.jpeg
+*.webp

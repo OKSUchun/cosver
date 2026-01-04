@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 import re
 
-_DB_PATH = "cosver.db"
+_DB_PATH = os.getenv("COSVER_DB_PATH", "cosver.db")
+_IMAGE_DIR = os.getenv("COSVER_IMAGE_DIR", "downloaded_images")
 CACHE_HOURS = 24
 
 def set_db_path(path: str):
@@ -188,11 +189,13 @@ def get_cached_results(keyword: str, max_age_hours: int = CACHE_HOURS) -> List[D
     finally:
         conn.close()
 
-def download_and_save_image(product_id: int, platform: str, img_url: str, base_dir: str = "downloaded_images", conn=None) -> Optional[str]:
+def download_and_save_image(product_id: int, platform: str, img_url: str, base_dir: str = None, conn=None) -> Optional[str]:
     """
     Download image, save to file (optional) and save as BLOB to database.
     Returns local file path if saved, or "DB_BLOB" if only saved in DB.
     """
+    if base_dir is None:
+        base_dir = _IMAGE_DIR
     if not img_url:
         return None
     
