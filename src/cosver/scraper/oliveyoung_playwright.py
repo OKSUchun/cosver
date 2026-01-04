@@ -5,7 +5,7 @@ import sys
 from playwright.sync_api import sync_playwright
 
 
-def search_product(keyword, headful=True):
+def search_product(keyword, headful=False):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=not headful, args=["--start-maximized"])
         # create context with default viewport None to use full window
