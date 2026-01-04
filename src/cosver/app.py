@@ -3,13 +3,22 @@ import sqlite3
 import pandas as pd
 import time
 import os
+import sys
+import subprocess
+
+# --- Path Injection (Fix for Streamlit Cloud ModuleNotFoundError) ---
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# app.py is in src/cosver, so we need the parent of cosver (which is src)
+src_path = os.path.abspath(os.path.join(current_dir, ".."))
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
+
 from cosver.aggregator.search import search_all_platforms
 from cosver.scraper.ably import search_product as ab
 from cosver.scraper.musinsa import search_product as ms
 from cosver.scraper.oliveyoung_playwright import search_product as oy
 from cosver.scraper.zigzag import search_product as zz
 from cosver.frontend.utils import group_similar_products
-import subprocess
 
 # --- Playwright Install (for Streamlit Cloud) ---
 def install_playwright():
