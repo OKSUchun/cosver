@@ -6,8 +6,22 @@ from playwright.sync_api import sync_playwright
 
 
 def search_product(keyword, headful=False):
+    # Determine headless mode - default to True for cloud environments
+    is_headless = not headful
+    
+    # Common arguments for running Playwright in containerized environments (Streamlit Cloud, Docker, etc.)
+    browser_args = [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+    ]
+    
+    if headful:
+        browser_args.append("--start-maximized")
+
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=not headful, args=["--start-maximized"])
+        browser = p.chromium.launch(headless=is_headless, args=browser_args)
         # create context with default viewport None to use full window
         context = browser.new_context(viewport={"width": 1280, "height": 800})
         page = context.new_page()
