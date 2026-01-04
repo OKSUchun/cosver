@@ -21,21 +21,35 @@ from cosver.scraper.zigzag import search_product as zz
 from cosver.frontend.utils import group_similar_products
 
 # --- Playwright Install (for Streamlit Cloud) ---
+@st.cache_resource
 def install_playwright():
-    try:
-        import playwright
-    except ImportError:
-        return
+    """Install Playwright browsers if not already present."""
+    import sys
+    import subprocess
     
-    # Check if chromium exists
-    try:
-        subprocess.run(["playwright", "install", "chromium"], check=True)
-        print("✅ Playwright chromium installed")
-    except Exception as e:
-        print(f"⚠️ Playwright install failed: {e}")
+    # We force this on Linux (typical for cloud envs) if we aren't in a local known env
+    # Or just check for a common Streamlit Cloud env var
+    is_streamlit_cloud = os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud" or os.path.exists("/home/appuser")
+    
+    if is_streamlit_cloud or sys.platform.startswith("linux"):
+        try:
+            # First check if we already have chromium
+            import playwright
+            print("🚀 Checking Playwright browsers...")
+            # We use --with-deps to be safe, though packages.txt should handle most
+            result = subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], 
+                                 capture_output=True, text=True)
+            if result.returncode == 0:
+                st.info("Playwright browsers initialized.")
+                print("✅ Playwright chromium installed")
+            else:
+                print(f"⚠️ Playwright install output: {result.stdout} {result.stderr}")
+        except Exception as e:
+            print(f"❌ Playwright install failed: {e}")
+            st.error(f"Playwright Browser Installation Failed: {e}")
 
-if os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud" or os.getenv("IS_CLOUD"):
-    install_playwright()
+# Run installation
+install_playwright()
 
 # --- Page Config ---
 st.set_page_config(page_title="올최맞", page_icon="💄", layout="centered")
