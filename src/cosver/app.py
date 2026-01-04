@@ -20,7 +20,36 @@ from cosver.scraper.oliveyoung_playwright import search_product as oy
 from cosver.scraper.zigzag import search_product as zz
 from cosver.frontend.utils import group_similar_products
 
-# --- Page Config ---
+# --- Playwright Install (for Streamlit Cloud) ---
+@st.cache_resource
+def install_playwright():
+    """Install Playwright browsers if not already present. Silent version."""
+    import sys
+    import os
+    import subprocess
+    
+    # Check for Streamlit Cloud or Linux environment
+    is_streamlit_cloud = os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud" or os.path.exists("/home/appuser")
+    
+    if is_streamlit_cloud or sys.platform.startswith("linux"):
+        try:
+            # Check if chromium is already installed
+            import playwright
+            
+            # Simple check/install for chromium
+            print("🚀 Checking Playwright chromium...")
+            subprocess.run(
+                [sys.executable, "-m", "playwright", "install", "chromium"],
+                check=True,
+                capture_output=True
+            )
+            print("✅ Playwright chromium ready")
+        except Exception as e:
+            # Log to console only, no UI feedback
+            print(f"❌ Playwright setup warning: {e}")
+
+# Run installation
+install_playwright()
 st.set_page_config(page_title="올최맞", page_icon="💄", layout="centered")
 
 # --- UI Rules & CSS (Follows cosver.md) ---
