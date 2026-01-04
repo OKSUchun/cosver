@@ -14,10 +14,13 @@ def search_product(keyword, headful=False):
 
         # 1) 먼저 검색 메인 페이지로 가서 Cloudflare 검사/세션 쿠키를 통과시킨다
         referer_url = f"https://www.oliveyoung.co.kr/store/search/getSearchMain.do?query={keyword}"
-        print("Opening referer page to obtain session & cookies...")
-        page.goto(referer_url)
-        # 충분히 로드되고(그리고 Cloudflare가 있으면 이 시점에서 검사 통과됨) 네트워크 안정화 대기
-        page.wait_for_load_state("networkidle", timeout=20000)
+        print(f"Opening referer page: {referer_url}")
+        
+        # Increase timeout and use 'load' state which is usually more reliable than 'networkidle' on servers
+        page.goto(referer_url, wait_until="load", timeout=30000)
+        
+        # Short wait for any potential redirects/JS execution to settle
+        page.wait_for_timeout(2000) 
 
         # 2) 브라우저 컨텍스트(=JS + 쿠키 포함)에서 fetch로 POST 요청 실행
         print("Posting to API from browser context...")
