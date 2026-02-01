@@ -26,9 +26,33 @@ def search_product(keyword, headful=False):
         # create context with default viewport None to use full window
         # Set a realistic user agent
         context = browser.new_context(
-            viewport={"width": 1280, "height": 800},
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            viewport={"width": 1920, "height": 1080},
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         )
+        
+        # Inject stealth scripts to hide automation signals
+        context.add_init_script("""
+            // Overwrite the `webdriver` property to be undefined
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined
+            });
+
+            // Mock languages
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['ko-KR', 'ko', 'en-US', 'en']
+            });
+
+            // Mock plugins to look like a real browser
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5]
+            });
+
+            // Mock window.chrome
+            window.chrome = {
+                runtime: {}
+            };
+        """)
+
         page = context.new_page()
 
         # 1) 먼저 검색 메인 페이지로 가서 Cloudflare 검사/세션 쿠키를 통과시킨다

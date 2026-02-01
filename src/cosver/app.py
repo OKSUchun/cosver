@@ -37,16 +37,15 @@ def install_playwright():
             import playwright
             
             # Simple check/install for chromium
-            print("🚀 Checking Playwright chromium...")
+            # Simple check/install for chromium
             subprocess.run(
                 [sys.executable, "-m", "playwright", "install", "chromium"],
                 check=True,
                 capture_output=True
             )
-            print("✅ Playwright chromium ready")
-        except Exception as e:
-            # Log to console only, no UI feedback
-            print(f"❌ Playwright setup warning: {e}")
+        except Exception:
+            # Silent failure
+            pass
 
 # Run installation
 install_playwright()
