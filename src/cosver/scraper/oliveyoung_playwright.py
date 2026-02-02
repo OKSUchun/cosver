@@ -1,12 +1,18 @@
 # olive_search.py
 # Usage: python olive_search.py "키워드"
 import sys
+import os
 
 from playwright.sync_api import sync_playwright
 
 
-def search_product(keyword, headful=False):
-    # Determine headless mode - default to True for cloud environments
+def search_product(keyword, headful=None):
+    # Determine headless mode
+    if headful is None:
+        # Default to headful (visible browser) on Mac/Windows to avoid bot detection
+        # Default to headless on Linux (Cloud/Server)
+        headful = sys.platform in ["darwin", "win32"] and os.environ.get("HEADLESS") != "true"
+
     is_headless = not headful
     
     # Common arguments for running Playwright in containerized environments (Streamlit Cloud, Docker, etc.)
