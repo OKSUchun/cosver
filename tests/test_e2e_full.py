@@ -89,10 +89,10 @@ def test_search_flow(page: Page, streamlit_app):
         
         expect(page.get_by_role("heading", name="💄 올최맞")).to_be_visible(timeout=30000)
         
-        # 3. Enter search term "퓌 푸딩"
+        # 3. Enter search term "퓌 푸딩팟"
         search_input = page.get_by_placeholder(re.compile(r"헤라|product search|e\.g\.", re.IGNORECASE))
         expect(search_input).to_be_visible()
-        search_input.fill("퓌 푸딩")
+        search_input.fill("퓌 푸딩팟")
         
         # 4. Click Search
         search_button = page.get_by_role("button", name="Search")
