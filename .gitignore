@@ -166,3 +166,7 @@ data/images/
 *.png
 *.jpeg
 *.webp
+
+# database 관련 파일
+*.db
+

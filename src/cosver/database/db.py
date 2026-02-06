@@ -44,6 +44,21 @@ def init_db():
     conn.close()
     print(f"✅ Database initialized: {get_db_path()}")
 
+def _recover_db():
+    """
+    Attempts to recover from a corrupted database by deleting and re-initializing it.
+    This is a destructive operation but acceptable for a scraper cache.
+    """
+    try:
+        db_path = get_db_path()
+        if os.path.exists(db_path):
+            print(f"⚠️ Detected database corruption. Deleting {db_path}...")
+            os.remove(db_path)
+        init_db()
+        print("✅ Database successfully recovered.")
+    except Exception as e:
+        print(f"❌ Failed to recover database: {e}")
+
 def get_or_create_product(cursor, name: str, brand: str) -> int:
     """Get existing product ID or create new product."""
     normalized = normalize_name(name)
@@ -186,8 +201,17 @@ def get_cached_results(keyword: str, max_age_hours: int = CACHE_HOURS) -> List[D
                 })
         
         return results
+    except sqlite3.OperationalError as e:
+        print(f"⚠️ SQLite operational error in get_cached_results: {e}")
+        conn.close() # Ensure connection is closed before recovery
+        _recover_db()
+        return [] # Return empty to force a fresh scrape
     finally:
-        conn.close()
+        # Check if connection is open before closing (it might be closed in except block)
+        try:
+            conn.close()
+        except:
+            pass
 
 def download_and_save_image(product_id: int, platform: str, img_url: str, base_dir: str = None, conn=None) -> Optional[str]:
     """
